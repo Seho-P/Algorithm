@@ -1,63 +1,71 @@
 #include <iostream>
-#include <queue>
 using namespace std;
 
 int chess[501][501];
-int visited[501][501];
 int parent[501][501];
 int result[501][501];
-
 int dx[8] = {1,1,0,-1,-1,-1,0,1};
 int dy[8] = {0,-1,-1,-1,0,1,1,1};
 
-int dfs(int r,int c,int mr,int mc){
-    if(visited[r][c])return parent[r][c];
-    
-    visited[r][c]=1;
-    int temchess = chess[r][c];
-    int mintem = temchess;
-    int nextr=r,nextc=c;
-    for(int i=0;i<8;i++){
-            int xx = r+dx[i];
-            int yy = c+dy[i];
-            if(xx>=0 && xx<mr && yy>=0 && yy<mc){
-                if(mintem>chess[xx][yy]){
-                mintem = chess[xx][yy];
-                nextr=xx,nextc=yy;
-                }
-            }
-        }
-    if(temchess!=mintem){
-        parent[r][c] = dfs(nextr,nextc,mr,mc);
-    }
-    else{
-        parent[r][c]=r*mc+c;
-    }
-    return parent[r][c];
+int r, c;
+
+// parent를 1차원 인덱스로 관리
+int find_parent(int x) {
+    int px = x / c;
+    int py = x % c;
+    if (parent[px][py] == x) return x;
+    return parent[px][py] = find_parent(parent[px][py]); // path compression
 }
 
-int main(){
-    int r,c;
+void union_cell(int x, int y) {
+    int px = find_parent(x);
+    int py = find_parent(y);
+    if (px != py) parent[py / c][py % c] = px;
+}
+
+int main() {
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
     cin >> r >> c;
-    for(int i=0;i<r;i++){
-        for(int j=0;j<c;j++){
+    for (int i = 0; i < r; i++) {
+        for (int j = 0; j < c; j++) {
             cin >> chess[i][j];
+            parent[i][j] = i * c + j; // 초기엔 자기 자신이 루트
         }
     }
-    for(int i=0;i<r;i++){
-        for(int j=0;j<c;j++){
-            if(!visited[i][j]){
-                dfs(i,j,r,c);
-            }   
+
+    // 각 칸마다 가장 낮은 인접 칸으로 union
+    for (int i = 0; i < r; i++) {
+        for (int j = 0; j < c; j++) {
+            int minVal = chess[i][j];
+            int nx = i, ny = j;
+            for (int k = 0; k < 8; k++) {
+                int xx = i + dx[k];
+                int yy = j + dy[k];
+                if (xx >= 0 && xx < r && yy >= 0 && yy < c) {
+                    if (chess[xx][yy] < minVal) {
+                        minVal = chess[xx][yy];
+                        nx = xx; ny = yy;
+                    }
+                }
+            }
+            if (nx != i || ny != j) {
+                union_cell(nx * c + ny, i * c + j);
+            }
         }
     }
-    for(int i=0;i<r;i++){
-        for(int j=0;j<c;j++){
-            result[parent[i][j]/c][parent[i][j]%c]++;
+
+    // 각 칸이 최종적으로 도착하는 루트를 찾아 결과 기록
+    for (int i = 0; i < r; i++) {
+        for (int j = 0; j < c; j++) {
+            int p = find_parent(i * c + j);
+            result[p / c][p % c]++;
         }
     }
-    for(int i=0;i<r;i++){
-        for(int j=0;j<c;j++){
+
+    for (int i = 0; i < r; i++) {
+        for (int j = 0; j < c; j++) {
             cout << result[i][j] << " ";
         }
         cout << "\n";
