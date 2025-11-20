@@ -1,36 +1,22 @@
 #include <iostream>
 #include <vector>
-#include <queue>
-#include <algorithm>
+#include <stack>
 using namespace std;
 
-int main(){
+int main() {
     int n;
     cin >> n;
-    vector<int> htop(n);
-    vector<int> ltop(n);
-    for(int i=0;i<n;i++){
-        cin >> htop[i];
+    vector<int> h(n);
+    vector<int> l(n);
+    for(int i=0; i<n; i++) cin >> h[i];
+
+    stack<int> s; // 인덱스 저장
+    for(int i=0; i<n; i++) {
+        while(!s.empty() && h[s.top()] < h[i]) s.pop();
+        if(s.empty()) l[i] = 0;
+        else l[i] = s.top() + 1; // 1-based index
+        s.push(i);
     }
-    priority_queue<pair<int,int>,vector<pair<int,int>>,greater<>> toplist;
-    toplist.push({htop[n-1],n-1});
-    for(int i=n-2;i>=0;i--){
-        while(!toplist.empty()){
-            if(htop[i]>toplist.top().first){
-                ltop[toplist.top().second] = i+1;
-                toplist.pop();
-            }
-            else{
-                break;
-            }
-        }
-        toplist.push({htop[i],i});
-    }
-    while(!toplist.empty()){
-        ltop[toplist.top().second]=0;
-        toplist.pop();
-    }
-    for(int i=0;i<n;i++){
-        cout << ltop[i] << " ";
-    }
+
+    for(int i=0; i<n; i++) cout << l[i] << " ";
 }
