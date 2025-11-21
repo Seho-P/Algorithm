@@ -9,9 +9,8 @@ int main(){
     int ss = s.size();
     while(l1<ss && l2<ss){
         if(s[l1]=='B'){
-            l2=l1+1;
             while(l2<ss){
-                if(s[l2]=='C'){
+                if(s[l2]=='C' && l1<l2){
                     s[l1]='0';
                     s[l2]='0';
                     result++;
@@ -29,9 +28,8 @@ int main(){
     l1=0,l2=0;
     while(l1<ss && l2<ss){
         if(s[l1]=='A'){
-            l2=l1+1;
             while(l2<ss){
-                if(s[l2]=='B'){
+                if(s[l2]=='B' && l1<l2){
                     s[l1]='0';
                     s[l2]='0';
                     result++;
@@ -46,7 +44,5 @@ int main(){
             l1++;
         }
     }
-    
-    // cout << s;
     cout << result;
 }
