@@ -1,78 +1,105 @@
 #include <iostream>
-#include <string>
 #include <queue>
+#include <vector>
+#include <string>
 using namespace std;
 
 char house[51][51];
-pair<int,int> startdoor = {-1,-1};
-pair<int,int> enddoor;
+int dist[51][51][4];
 
-//상하좌우
-//  0상 / 3우 \ 2좌
-//  1하 / 2좌 \ 3우 
-//  2좌 / 1하 \ 0상
-//  3우 / 0상 \ 1하
-int result;
-int minresult = 9999;
-int cntm;
-int dx[4] = {0,0,-1,1};
-int dy[4] = {-1,1,0,0};
-int mirror[4][2] = {{3,2},{2,3},{1,0},{0,1}};
-char mir[2] = {'0','1'};
+int dy[4] = {-1, 1, 0, 0};
+int dx[4] = {0, 0, -1, 1};
 
-struct mhd{
-    int y;
-    int x;
-    int cur;
-    int result;
-    bool operator<(const mhd a)const{
-        return this->result > a.result;
+struct Node{
+    int y, x, dir, cost;
+    bool operator<(const Node& other) const{
+        return cost > other.cost; // 최소 힙
     }
 };
 
-
-
 int main(){
+
     int n;
-    int cur;
-    
-    string tem;
     cin >> n;
+
+    vector<pair<int,int>> door;
+    string s;
+
     for(int i=0;i<n;i++){
-        cin >> tem;
+        cin >> s;
         for(int j=0;j<n;j++){
-            house[i][j]=tem[j];
-            if(house[i][j]=='#'){
-                if(startdoor.first==-1) startdoor = {i,j};
-                else enddoor = {i,j};
+            house[i][j] = s[j];
+            if(house[i][j] == '#') door.push_back({i,j});
+        }
+    }
+
+    auto [sy, sx] = door[0];
+    auto [ey, ex] = door[1];
+
+    // 거리 배열 초기화
+    for(int y=0;y<n;y++)
+        for(int x=0;x<n;x++)
+            for(int d=0;d<4;d++)
+                dist[y][x][d] = 1e9;
+
+    priority_queue<Node> pq;
+
+    // 시작 지점: 네 방향 전부 0으로 시작
+    for(int d=0;d<4;d++){
+        dist[sy][sx][d] = 0;
+        pq.push({sy, sx, d, 0});
+    }
+
+    while(!pq.empty()){
+        Node cur = pq.top();
+        pq.pop();
+
+        int y = cur.y;
+        int x = cur.x;
+        int dir = cur.dir;
+        int cost = cur.cost;
+
+        if(cost > dist[y][x][dir]) continue;
+
+        int ny = y + dy[dir];
+        int nx = x + dx[dir];
+
+        if(ny < 0 || ny >= n || nx < 0 || nx >= n) continue;
+        if(house[ny][nx] == '*') continue;
+
+        // 도착
+        if(ny == ey && nx == ex){
+            cout << cost;
+            return 0;
+        }
+
+        // 직진
+        if(dist[ny][nx][dir] > cost){
+            dist[ny][nx][dir] = cost;
+            pq.push({ny, nx, dir, cost});
+        }
+
+        // 거울 설치 가능한 위치면 방향 전환
+        if(house[ny][nx] == '!'){
+            if(dir <= 1){
+                // 상/하 → 좌/우
+                for(int nd : {2,3}){
+                    if(dist[ny][nx][nd] > cost + 1){
+                        dist[ny][nx][nd] = cost + 1;
+                        pq.push({ny, nx, nd, cost + 1});
+                    }
+                }
+            }else{
+                // 좌/우 → 상/하
+                for(int nd : {0,1}){
+                    if(dist[ny][nx][nd] > cost + 1){
+                        dist[ny][nx][nd] = cost + 1;
+                        pq.push({ny, nx, nd, cost + 1});
+                    }
+                }
             }
-            else if(house[i][j]=='!') cntm++;
         }
     }
-    
-    priority_queue<mhd> mlist;
-    for(int i=0;i<4;i++){
-        mlist.push({startdoor.first,startdoor.second,i,0});
-    }
-    
-    while(!mlist.empty()){
-        mhd nowmhd = mlist.top();
-        mlist.pop();
-        while(1){
-            nowmhd.y+=dy[nowmhd.cur];
-            nowmhd.x+=dx[nowmhd.cur];
-            if(house[nowmhd.y][nowmhd.x]!='.')break;
-        }
-        if(nowmhd.y == enddoor.first && nowmhd.x == enddoor.second){
-            minresult = nowmhd.result;
-            break;
-        }
-        // cout << nowmhd.y << " " << nowmhd.x << endl;
-        if(house[nowmhd.y][nowmhd.x]=='!'){
-            mlist.push({nowmhd.y,nowmhd.x,mirror[nowmhd.cur][0],nowmhd.result+1});
-            mlist.push({nowmhd.y,nowmhd.x,mirror[nowmhd.cur][1],nowmhd.result+1});
-            mlist.push({nowmhd.y,nowmhd.x,nowmhd.cur,nowmhd.result});
-        }
-    }
-    cout << minresult;
+
+    return 0;
 }
