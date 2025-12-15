@@ -1,41 +1,52 @@
 #include <iostream>
-#include <queue>
 #include <vector>
+#include <queue>
+#include <climits>
 using namespace std;
 
-vector<pair<int,int>> house[100001];
-int visited[100001];
-int result = 99999999;
-bool check = true;
+vector<pair<int,int>> graph[100001];
+int best[100001];
 
 int main(){
-    int n,m,s,e;
-    int h1,h2,k;
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    int n, m, s, e;
     cin >> n >> m >> s >> e;
-    for(int i=0;i<m;i++){
-        cin >> h1 >> h2 >> k;
-        house[h1].push_back({k,h2});
-        house[h2].push_back({k,h1});
+
+    for(int i = 0; i < m; i++){
+        int a, b, k;
+        cin >> a >> b >> k;
+        graph[a].push_back({k, b});
+        graph[b].push_back({k, a});
     }
-    priority_queue<pair<int,int>> housek;
-    housek.push({result,s});
-    while(!housek.empty()){
-        int nowk = housek.top().first;
-        int nowh = housek.top().second;
-        housek.pop();
-        if(visited[nowh])continue;
-        visited[nowh]=1;
-        result = min(result,nowk);
-        if(nowh==e)break;
-        // cout << nowh << nowk<<endl;
-        
-        for(int i=0;i<int(house[nowh].size());i++){
-            if(visited[house[nowh][i].second]==0){
-                housek.push({house[nowh][i].first,house[nowh][i].second});
+
+    priority_queue<pair<int,int>> pq;
+    best[s] = INT_MAX;
+    pq.push({best[s], s});
+
+    while(!pq.empty()){
+        auto [curW, cur] = pq.top();
+        pq.pop();
+
+        if(cur == e) {
+            cout << curW;
+            return 0;
+        }
+
+        if(curW < best[cur]) continue;
+
+        for(auto &nx : graph[cur]){
+            int w = nx.first;
+            int next = nx.second;
+            int nextW = min(curW, w);
+
+            if(nextW > best[next]){
+                best[next] = nextW;
+                pq.push({nextW, next});
             }
         }
-        
     }
-    if(visited[e])cout <<result;
-    else cout << 0;
+
+    cout << 0;
 }
